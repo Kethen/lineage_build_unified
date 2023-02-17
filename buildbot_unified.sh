@@ -62,15 +62,6 @@ prep_build() {
     mkdir -p ~/build-output
     echo ""
 
-    repopick -Q "(status:open+AND+NOT+is:wip)+(label:Code-Review>=0+AND+label:Verified>=0)+project:LineageOS/android_packages_apps_Trebuchet+branch:lineage-19.1+NOT+332083"
-    repopick -t twelve-burnin
-    repopick 321337 # Deprioritize important developer notifications
-    repopick 321338 # Allow disabling important developer notifications
-    repopick 321339 # Allow disabling USB notifications
-    repopick 329229 -f # Alter model name to avoid SafetyNet HW attestation enforcement
-    repopick 329230 -f # keystore: Block key attestation for SafetyNet
-    repopick 331534 -f # SystemUI: Add support to add/remove QS tiles with one tap
-    repopick 331791 -f # Skip checking SystemUI's permission for observing sensor privacy
 }
 
 apply_patches() {
@@ -124,9 +115,11 @@ build_treble() {
     lunch lineage_${TARGET}-userdebug
     make installclean
     make -j$(nproc --all) systemimage
-    mv $OUT/system.img ~/build-output/lineage-19.1-$BUILD_DATE-UNOFFICIAL-${TARGET}$(${PERSONAL} && echo "-personal" || echo "").img
+    cat $OUT/system.img | zstd -19 -T0 > ~/build-output/ng-v3-$BUILD_DATE-UNOFFICIAL-${TARGET}$(${PERSONAL} && echo "-personal" || echo "").img.zst
     make vndk-test-sepolicy
 }
+
+source lineage_build_unified/pre_build.sh
 
 if ${NOSYNC}
 then
@@ -139,7 +132,7 @@ else
     prep_build
     echo "Applying patches"
     prep_${MODE}
-    apply_patches patches_platform
+    #apply_patches patches_platform
     apply_patches patches_${MODE}
     if ${PERSONAL}
     then
@@ -148,6 +141,7 @@ else
     fi
     finalize_${MODE}
     echo ""
+    source lineage_build_unified/post_sync_and_patch.sh
 fi
 
 
