@@ -1,6 +1,7 @@
 #!/bin/bash
 echo ""
 echo "LineageOS 20 Unified Buildbot"
+echo "Modified to build droid-ng"
 echo "Executing in 5 seconds - CTRL-C to exit"
 echo ""
 sleep 5
@@ -62,15 +63,19 @@ prep_build() {
     mkdir -p ~/build-output
     echo ""
 
-    repopick 321337 -f # Deprioritize important developer notifications
-    repopick 321338 -f # Allow disabling important developer notifications
-    repopick 321339 -f # Allow disabling USB notifications
-    repopick 340916 # SystemUI: add burnIn protection
-    repopick 342860 # codec2: Use numClientBuffers to control the pipeline
-    repopick 342861 # CCodec: Control the inputs to avoid pipeline overflow
-    repopick 342862 # [WA] Codec2: queue a empty work to HAL to wake up allocation thread
-    repopick 342863 # CCodec: Use pipelineRoom only for HW decoder
-    repopick 342864 # codec2: Change a Info print into Verbose
+    if false
+    then
+        # disable for now, just go with droid-ng's manifest
+        repopick 321337 -f # Deprioritize important developer notifications
+        repopick 321338 -f # Allow disabling important developer notifications
+        repopick 321339 -f # Allow disabling USB notifications
+        repopick 340916 # SystemUI: add burnIn protection
+        repopick 342860 # codec2: Use numClientBuffers to control the pipeline
+        repopick 342861 # CCodec: Control the inputs to avoid pipeline overflow
+        repopick 342862 # [WA] Codec2: queue a empty work to HAL to wake up allocation thread
+        repopick 342863 # CCodec: Use pipelineRoom only for HW decoder
+        repopick 342864 # codec2: Change a Info print into Verbose
+    fi
 }
 
 apply_patches() {
@@ -95,7 +100,7 @@ finalize_treble() {
     rm -f device/*/sepolicy/common/private/genfs_contexts
     cd device/phh/treble
     git clean -fdx
-    bash generate.sh lineage
+    bash generate.sh ng
     cd ../../..
 }
 
@@ -114,10 +119,10 @@ build_treble() {
         ("64GN") TARGET=arm64_bgN;;
         (*) echo "Invalid target - exiting"; exit 1;;
     esac
-    lunch lineage_${TARGET}-userdebug
+    lunch ng_${TARGET}-userdebug
     make installclean
     make -j$(nproc --all) systemimage
-    mv $OUT/system.img ~/build-output/lineage-20.0-$BUILD_DATE-UNOFFICIAL-${TARGET}$(${PERSONAL} && echo "-personal" || echo "").img
+    cat $OUT/system.img | zstd -19 > ~/build-output/ng-v4-$BUILD_DATE-UNOFFICIAL-${TARGET}$(${PERSONAL} && echo "-personal" || echo "").img.zst
     #make vndk-test-sepolicy
 }
 
