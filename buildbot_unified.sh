@@ -122,7 +122,7 @@ build_treble() {
     lunch ng_${TARGET}-userdebug
     make installclean
     make -j$(nproc --all) systemimage
-    cat $OUT/system.img | zstd -19 > ~/build-output/ng-v4-$BUILD_DATE-UNOFFICIAL-${TARGET}$(${PERSONAL} && echo "-personal" || echo "").img.zst
+    cat $OUT/system.img | zstd -T0 -19 > ~/build-output/ng-v4-$BUILD_DATE-UNOFFICIAL-${TARGET}$(${PERSONAL} && echo "-personal" || echo "").img.zst
     #make vndk-test-sepolicy
 }
 
